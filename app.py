@@ -8,7 +8,7 @@ from wtforms.validators import DataRequired
 from forms import UserForm, NodeForm, APIKeyForm, LoginForm
 from dotenv import load_dotenv
 from functools import wraps
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 # 🔥 Load environment variables from .env
 load_dotenv()
@@ -160,6 +160,11 @@ def login_required(f):
             
         return f(*args, **kwargs)
     return decorated_function
+
+# Context processor to add year to all templates
+@app.context_processor
+def inject_year():
+    return {'year': datetime.now().year}
 
 # Then all the routes follow...
 @app.route('/')

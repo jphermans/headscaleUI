@@ -191,4 +191,4 @@ This project is licensed under the **MIT License**.
 
 ---
 
-### 👨‍💻 Developed by **Jean-Pierre**
+### 👨‍💻 Developed by **JPHsystems**
