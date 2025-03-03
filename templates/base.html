@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HeadscaleUI</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f6fa;
+            --accent-color: #2c3e50;
+            --card-bg: white;
+            --text-color: #2c3e50;
+            --border-color: #ddd;
+            --navbar-bg: white;
+            --item-bg: white;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        [data-bs-theme="dark"] {
+            --primary-color: #5c9ce6;
+            --secondary-color: #1a1d21;
+            --accent-color: #e9ecef;
+            --card-bg: #2d3238;
+            --text-color: #e9ecef;
+            --border-color: #404750;
+            --navbar-bg: #2d3238;
+            --item-bg: #353a40;
+            --shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        body {
+            background-color: var(--secondary-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
+        }
+        
+        .navbar {
+            background-color: var(--navbar-bg) !important;
+            box-shadow: var(--shadow);
+            padding: 1rem 0;
+        }
+        
+        .navbar-brand {
+            color: var(--primary-color) !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .nav-link {
+            color: var(--text-color) !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            margin: 0 0.2rem;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--primary-color);
+            color: white !important;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border: none;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+        
+        .btn-outline-primary {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .list-group-item {
+            background-color: var(--item-bg);
+            border: none;
+            margin-bottom: 0.5rem;
+            border-radius: 5px !important;
+            box-shadow: var(--shadow);
+            color: var(--text-color);
+        }
+        
+        .form-control {
+            background-color: var(--item-bg);
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            color: var(--text-color);
+        }
+        
+        .form-control:focus {
+            background-color: var(--item-bg);
+            color: var(--text-color);
+            border-color: var(--primary-color);
+        }
+        
+        .alert {
+            border-radius: 5px;
+            border: none;
+        }
+        
+        .container {
+            max-width: 1140px;
+            padding: 2rem 1rem;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-color);
+        }
+        
+        .text-muted {
+            color: #6c757d !important;
+        }
+        
+        [data-bs-theme="dark"] .text-muted {
+            color: #9ba4ae !important;
+        }
+        
+        .dashboard-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease;
+            height: 100%;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        /* Theme switcher styles */
+        .theme-switcher {
+            padding: 0.5rem 1rem;
+            margin-right: 1rem;
+        }
+        
+        .theme-switcher .btn-group {
+            box-shadow: var(--shadow);
+        }
+        
+        .theme-switcher .btn {
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .theme-switcher .active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        /* Code block styling */
+        .bg-light {
+            background-color: var(--item-bg) !important;
+        }
+        
+        code {
+            color: var(--primary-color);
+        }
+
+        /* Add fade out animation for alerts */
+        .alert.fade-out {
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-network-wired"></i> HeadscaleUI
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if 'api_key' in session %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('users') }}">
+                                <i class="fas fa-users"></i> Users
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('nodes') }}">
+                                <i class="fas fa-laptop"></i> Nodes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('apikeys') }}">
+                                <i class="fas fa-key"></i> API Keys
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('help') }}">
+                                <i class="fas fa-question-circle"></i> Help
+                            </a>
+                        </li>
+                        <li class="nav-item theme-switcher">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" data-bs-theme-value="light">
+                                    <i class="fas fa-sun"></i>
+                                </button>
+                                <button class="btn btn-outline-primary" data-bs-theme-value="dark">
+                                    <i class="fas fa-moon"></i>
+                                </button>
+                                <button class="btn btn-outline-primary" data-bs-theme-value="auto">
+                                    <i class="fas fa-circle-half-stroke"></i>
+                                </button>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Add this right after the navigation bar -->
+    {% if 'api_key' in session %}
+        <script>
+            // Check session expiry every minute
+            setInterval(function() {
+                fetch('{{ url_for("check_session") }}')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.valid) {
+                            window.location.href = '{{ url_for("login") }}';
+                        }
+                    });
+            }, 60000);
+        </script>
+    {% endif %}
+
+    <!-- Add theme switcher script -->
+    <script>
+        (() => {
+            'use strict'
+            
+            const getStoredTheme = () => localStorage.getItem('theme')
+            const setStoredTheme = theme => localStorage.setItem('theme', theme)
+            
+            const getPreferredTheme = () => {
+                const storedTheme = getStoredTheme()
+                if (storedTheme) {
+                    return storedTheme
+                }
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+            }
+            
+            const setTheme = theme => {
+                if (theme === 'auto') {
+                    document.documentElement.setAttribute('data-bs-theme', 
+                        window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+                    )
+                } else {
+                    document.documentElement.setAttribute('data-bs-theme', theme)
+                }
+            }
+            
+            // Set initial theme
+            setTheme(getPreferredTheme())
+            
+            // Add event listeners
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                const storedTheme = getStoredTheme()
+                if (storedTheme !== 'light' && storedTheme !== 'dark') {
+                    setTheme(getPreferredTheme())
+                }
+            })
+            
+            // Handle button clicks
+            document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
+                toggle.addEventListener('click', () => {
+                    const theme = toggle.getAttribute('data-bs-theme-value')
+                    setStoredTheme(theme)
+                    setTheme(theme)
+                    
+                    // Update active states
+                    document.querySelectorAll('[data-bs-theme-value]').forEach(btn => {
+                        btn.classList.remove('active')
+                    })
+                    toggle.classList.add('active')
+                })
+                
+                // Set initial active state
+                if (toggle.getAttribute('data-bs-theme-value') === getPreferredTheme()) {
+                    toggle.classList.add('active')
+                }
+            })
+        })()
+    </script>
+
+    <!-- Main Content -->
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show auto-dismiss">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Add this script before the closing body tag -->
+    <script>
+        // Auto-dismiss alerts after 2 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert.auto-dismiss');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.classList.add('fade-out');
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 500);
+                }, 2000);
+            });
+        });
+    </script>
+
+    <!-- Add this right before the closing body tag -->
+    <div class="modal fade" id="welcomeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-info-circle"></i> Welcome to HeadscaleUI
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>🚧 <strong>Work in Progress</strong> 🚧</p>
+                    <p>This UI is actively being developed and maintained. Features and improvements are regularly added.</p>
+                    <p>For updates and issues, please visit: <a href="https://github.com/jphsystems/headscaleui" target="_blank">GitHub Repository</a></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add this script after the modal -->
+    <script>
+        // Show welcome modal after login if it hasn't been shown in this session
+        document.addEventListener('DOMContentLoaded', function() {
+            if ({% if 'api_key' in session and not session.get('shown_welcome') %}true{% else %}false{% endif %}) {
+                const welcomeModal = new bootstrap.Modal(document.getElementById('welcomeModal'));
+                welcomeModal.show();
+                // Mark the welcome message as shown for this session
+                fetch('{{ url_for("mark_welcome_shown") }}');
+            }
+        });
+    </script>
+</body>
+</html> 

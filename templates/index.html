@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center mb-5">
+        <h1 class="display-4">🚀 Welcome to Headscale Dashboard</h1>
+        <p class="lead text-muted">Manage your Headscale network with ease</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 col-lg-3 mb-4">
+        <a href="{{ url_for('users') }}" class="text-decoration-none">
+            <div class="dashboard-card text-center">
+                <i class="fas fa-users fa-2x mb-3" style="color: #4a90e2;"></i>
+                <h3 class="h5">Manage Users</h3>
+                <p class="text-muted small">Add and manage network users</p>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <a href="{{ url_for('nodes') }}" class="text-decoration-none">
+            <div class="dashboard-card text-center">
+                <i class="fas fa-laptop fa-2x mb-3" style="color: #2ecc71;"></i>
+                <h3 class="h5">View Nodes</h3>
+                <p class="text-muted small">Monitor connected devices</p>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <a href="{{ url_for('apikeys') }}" class="text-decoration-none">
+            <div class="dashboard-card text-center">
+                <i class="fas fa-key fa-2x mb-3" style="color: #f1c40f;"></i>
+                <h3 class="h5">API Keys</h3>
+                <p class="text-muted small">Manage access tokens</p>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <a href="{{ url_for('help') }}" class="text-decoration-none">
+            <div class="dashboard-card text-center">
+                <i class="fas fa-question-circle fa-2x mb-3" style="color: #9b59b6;"></i>
+                <h3 class="h5">Help</h3>
+                <p class="text-muted small">Documentation & support</p>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}

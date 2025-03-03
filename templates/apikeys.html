@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="h4 mb-4">Generate New API Key</h3>
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", placeholder="Enter a description for this key") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.validity.label(class="form-label") }}
+                        {{ form.validity(class="form-select") }}
+                    </div>
+                    {{ form.submit(class="btn btn-primary w-100") }}
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="h4 mb-4">Manage API Keys</h3>
+                <div class="list-group">
+                    {% for key in api_keys %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-key text-warning"></i>
+                                <span class="ms-2">{{ key["prefix"] }}</span>
+                                <small class="text-muted d-block">
+                                    {{ key["description"] or "No description" }}
+                                    <br>
+                                    Expires: {{ key["expiration"] }}
+                                </small>
+                            </div>
+                            <form method="POST" action="{{ url_for('delete_apikey', key_id=key['id']) }}">
+                                <button type="submit" class="btn btn-danger btn-sm" 
+                                        onclick="return confirm('Are you sure you want to delete this API key?');">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,6 @@
+requests~=2.32.3
+flask~=3.1.0
+wtforms~=3.2.1
+Flask-Bootstrap~=3.3.7.1
+dotenv~=0.9.9
+python-dotenv~=1.0.1

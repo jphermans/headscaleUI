@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="h4 mb-4">Add New Node</h3>
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control", placeholder="Enter node name") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.user.label(class="form-label") }}
+                        {{ form.user(class="form-select") }}
+                    </div>
+                    {{ form.submit(class="btn btn-primary w-100") }}
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="h4 mb-4">Manage Nodes</h3>
+                {% for user_id, nodes in nodes_by_user.items() %}
+                    <div class="mb-4">
+                        <h4 class="h5 mb-3">
+                            <i class="fas fa-user text-primary"></i>
+                            {{ users | selectattr("id", "equalto", user_id) | map(attribute="name") | first or "Unassigned Nodes" }}
+                        </h4>
+                        <div class="list-group">
+                            {% for node in nodes %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-laptop text-success"></i>
+                                        <span class="ms-2">{{ node["name"] }}</span>
+                                        <small class="text-muted d-block">
+                                            IP: {{ node["ipAddresses"] | join(', ') }}
+                                        </small>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('delete_node', node_id=node['id']) }}">
+                                        <button type="submit" class="btn btn-danger btn-sm"
+                                                onclick="return confirm('Are you sure you want to delete this node?');">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
