@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  headscaleui:
+    build: .
+    image: headscaleui:latest
+    container_name: headscaleui
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      - HEADSCALE_URL=${HEADSCALE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - FLASK_ENV=production
+      - FLASK_APP=app.py
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3" 

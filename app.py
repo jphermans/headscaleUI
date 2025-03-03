@@ -369,5 +369,21 @@ def check_session():
     except requests.exceptions.RequestException:
         return jsonify({'valid': False})
 
+@app.route('/health')
+def health():
+    """Health check endpoint for Docker."""
+    try:
+        # Try to connect to Headscale server
+        response = requests.get(f"{HEADSCALE_URL}/api/v1/apikey", timeout=5)
+        is_headscale_healthy = response.status_code != 500
+    except:
+        is_headscale_healthy = False
+
+    status = 200 if is_headscale_healthy else 500
+    return jsonify({
+        'status': 'healthy' if is_headscale_healthy else 'unhealthy',
+        'headscale_connection': is_headscale_healthy
+    }), status
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True)
