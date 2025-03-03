@@ -14,14 +14,18 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    gcc \
-    python3-dev \
-    libssl-dev \
-    && rm -rf /var/lib/apt/lists/*
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install Python dependencies
+# Copy only requirements first to leverage Docker cache
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+
+# Install Python dependencies with minimal size
+RUN pip install --no-cache-dir -r requirements.txt \
+    && find /usr/local/lib/python3.11/site-packages -name "*.pyc" -delete \
+    && find /usr/local/lib/python3.11/site-packages -name "__pycache__" -delete
 
 # Copy application code
 COPY . .

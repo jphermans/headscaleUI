@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container">
     <h1 class="mb-4">HeadscaleUI Help Documentation</h1>
     
     <div class="card mb-4">
@@ -20,6 +20,15 @@
                 <li>Copy the generated key and use it to log in to HeadscaleUI</li>
             </ol>
             
+            <h3 class="h5">API Keys Management</h3>
+            <ul>
+                <li>Generate API keys with different validity periods (10 years to 1 day)</li>
+                <li>Save your API key immediately after generation - it won't be shown again</li>
+                <li>You cannot delete the API key you're currently using</li>
+                <li>Deleting an API key is permanent and cannot be undone</li>
+                <li>API keys are identified by their prefix (e.g., 'rIcg8v3')</li>
+            </ul>
+
             <h3 class="h5">Validity Periods</h3>
             <p>When creating an API key, you can specify different validity periods:</p>
             <ul>
@@ -49,12 +58,19 @@
                 <li>Click "Add User"</li>
             </ol>
             
+            <h3 class="h5">User Management Rules</h3>
+            <ul>
+                <li>Create users to organize your nodes</li>
+                <li>Users can't be deleted if they have associated nodes</li>
+                <li>User names must be unique</li>
+            </ul>
+
             <h3 class="h5">Deleting a User</h3>
             <ol>
                 <li>Go to the "Users" page</li>
                 <li>Find the user you want to delete</li>
                 <li>Click the delete button next to the user</li>
-                <li><strong>Note:</strong> Deleting a user will also remove all associated nodes</li>
+                <li><strong>Note:</strong> You must remove all nodes from a user before deletion</li>
             </ol>
         </div>
     </div>
@@ -72,6 +88,13 @@
                 <li>Click "Add Node"</li>
             </ol>
             
+            <h3 class="h5">Node Management Rules</h3>
+            <ul>
+                <li>Nodes must be assigned to a user</li>
+                <li>Node names must be unique within a user</li>
+                <li>You can delete nodes at any time</li>
+            </ul>
+
             <h3 class="h5">Deleting a Node</h3>
             <ol>
                 <li>Go to the "Nodes" page</li>
@@ -81,40 +104,23 @@
         </div>
     </div>
 
-    <div class="card mb-4">
+    <div class="card">
         <div class="card-header">
-            <h2 class="h4 mb-0">🔑 Managing API Keys</h2>
+            <h2 class="h4 mb-0">⚙️ Session Management</h2>
         </div>
         <div class="card-body">
-            <h3 class="h5">Generating an API Key</h3>
-            <ol>
-                <li>Go to the "API Keys" page</li>
-                <li>Enter a description for the key</li>
-                <li>Select a validity period</li>
-                <li>Click "Generate API Key"</li>
-                <li><strong>Important:</strong> Save the key immediately as it won't be shown again</li>
-            </ol>
-            
-            <h3 class="h5">Deleting an API Key</h3>
-            <ol>
-                <li>Go to the "API Keys" page</li>
-                <li>Find the API key you want to delete</li>
-                <li>Click the delete button next to the key</li>
-            </ol>
-        </div>
-    </div>
-
-    <div class="card mb-4">
-        <div class="card-header">
-            <h2 class="h4 mb-0">❓ Session Management</h2>
-        </div>
-        <div class="card-body">
+            <h3 class="h5">Session Rules</h3>
             <ul>
-                <li>Your session will remain active for 12 hours</li>
-                <li>You can manually log out using the Logout button in the navigation bar</li>
-                <li>If your API key expires, you'll be automatically logged out</li>
+                <li>Sessions expire after 12 hours</li>
+                <li>You'll be automatically logged out if your API key expires or is deleted</li>
+                <li>Use the logout button to end your session manually</li>
                 <li>For security, create a new API key if you suspect your current one is compromised</li>
             </ul>
+
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Tip:</strong> For better security, use shorter validity periods for API keys and rotate them regularly.
+            </div>
         </div>
     </div>
 </div>

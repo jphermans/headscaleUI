@@ -1,20 +1,19 @@
 version: '3.8'
 
 services:
-  headscaleui:
+  headscale-ui:
     build: .
-    image: headscaleui:latest
-    container_name: headscaleui
-    restart: unless-stopped
+    container_name: headscale-ui
     ports:
       - "5001:5001"
     environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=production
       - HEADSCALE_URL=${HEADSCALE_URL}
       - SECRET_KEY=${SECRET_KEY}
-      - FLASK_ENV=production
-      - FLASK_APP=app.py
     volumes:
-      - ./logs:/app/logs
+      - ./:/app
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
       interval: 30s
