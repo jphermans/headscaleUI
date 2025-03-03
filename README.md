@@ -28,7 +28,7 @@ You can run HeadscaleUI either directly with Python or using Docker.
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/jphsystems/headscale-ui.git
+git clone https://github.com/jphermans/headscaleUI.git
 cd headscale-ui
 ```
 

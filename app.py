@@ -25,10 +25,17 @@ HEADSCALE_URL = os.getenv("HEADSCALE_URL")
 # 🛠 API Helper Functions
 def handle_api_response(response):
     """Handle common API response status codes."""
-    if response.status_code == 401:  # Unauthorized - key expired or invalid
-        session.pop('api_key', None)
-        raise requests.exceptions.RequestException("Session expired. Please login again.")
-    response.raise_for_status()
+    try:
+        if response.status_code == 401:  # Unauthorized - key expired or invalid
+            session.pop('api_key', None)
+            raise requests.exceptions.RequestException("Session expired. Please login again.")
+        elif response.status_code == 404:  # Not found
+            raise requests.exceptions.RequestException("Resource not found")
+        elif response.status_code == 500:  # Server error
+            raise requests.exceptions.RequestException("Internal server error")
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        raise requests.exceptions.RequestException(f"HTTP Error: {str(e)}")
 
 def get_headscale_data(endpoint):
     """Fetch data from the Headscale API."""
@@ -57,10 +64,49 @@ def delete_headscale_data(endpoint):
     url = f"{HEADSCALE_URL}{endpoint}"
     try:
         headers = {"Authorization": f"Bearer {session['api_key']}"}
-        response = requests.delete(url, headers=headers, timeout=5)
-        handle_api_response(response)
-        return response.json(), None
+        # For API key deletion, use a different endpoint format
+        if 'apikey' in endpoint:
+            # Use the prefix directly from the URL
+            key_prefix = endpoint.split('/')[-1]
+            delete_url = f"{HEADSCALE_URL}/api/v1/apikey/{key_prefix}"
+            print(f"[DEBUG] Attempting to delete API key with URL: {delete_url}")
+            delete_response = requests.delete(delete_url, headers=headers, timeout=5)
+            
+            print(f"[DEBUG] Delete response status: {delete_response.status_code}")
+            print(f"[DEBUG] Delete response body: {delete_response.text}")
+            
+            if delete_response.status_code in [200, 201, 204, 404]:  # Include 404 as success case
+                return {}, None
+            else:
+                print(f"[ERROR] Failed to delete key: {delete_response.text}")
+                return {}, f"Failed to delete key: {delete_response.text}"
+        else:
+            response = requests.delete(url, headers=headers, timeout=5)
+            print(f"[DEBUG] Response status code: {response.status_code}")
+            print(f"[DEBUG] Response headers: {dict(response.headers)}")
+            print(f"[DEBUG] Response body: {response.text}\n")
+
+        # Check response status
+        if response.status_code in [200, 204, 201]:
+            return {}, None
+        elif response.status_code == 500:
+            app.logger.error(f"Server error when deleting: {url}, Status: {response.status_code}, Response: {response.text}")
+            print(f"[ERROR] Server error: {response.text}")
+            return {}, "Internal server error occurred"
+        elif response.status_code == 404:
+            print(f"[ERROR] Resource not found: {response.text}")
+            return {}, "Resource not found"
+        elif response.status_code == 401:
+            session.pop('api_key', None)
+            print(f"[ERROR] Authentication failed: {response.text}")
+            return {}, "Session expired. Please login again."
+        else:
+            app.logger.error(f"Unexpected status code: {response.status_code}, Response: {response.text}")
+            print(f"[ERROR] Unexpected error: Status {response.status_code}, Response: {response.text}")
+            return {}, f"Error: {response.status_code} - {response.text}"
     except requests.exceptions.RequestException as e:
+        app.logger.error(f"Request exception when deleting: {url}, Error: {str(e)}")
+        print(f"[ERROR] Request exception: {str(e)}")
         return {}, str(e)
 
 # 📋 WTForms for input handling
@@ -263,43 +309,35 @@ def apikeys():
 @login_required
 def delete_apikey(key_id):
     """Delete an API Key."""
+    print(f"\n[DEBUG] Starting API key deletion for key_id: {key_id}")
+    
+    try:
+        current_key_id = int(session.get('api_key_id', 0))
+    except (ValueError, TypeError):
+        current_key_id = 0
+    
     # Don't allow deletion of the current key
-    if session.get('api_key_id') == key_id:
+    if str(current_key_id) == str(key_id):
+        print(f"[DEBUG] Attempted to delete current key (key_id: {key_id})")
         flash("Cannot delete the API key that you're currently using", 'warning')
         return redirect(url_for('apikeys'))
 
-    try:
-        # First check if the key exists
-        check_response = requests.get(
-            f"{HEADSCALE_URL}/api/v1/apikey/{key_id}", 
-            headers={"Authorization": f"Bearer {session['api_key']}"}, 
-            timeout=5
-        )
-        
-        if check_response.status_code == 404:
+    # Attempt to delete the key
+    print(f"[DEBUG] Calling delete_headscale_data with endpoint: /api/v1/apikey/{key_id}")
+    print(f"[DEBUG] Current session key_id: {current_key_id}, Type: {type(current_key_id)}")
+    print(f"[DEBUG] Key to delete: {key_id}")
+    
+    data, error = delete_headscale_data(f"/api/v1/apikey/{key_id}")
+    if error:
+        if "not found" in str(error).lower():
             flash("API key not found", 'warning')
-            return redirect(url_for('apikeys'))
-            
-        # Attempt to delete the key
-        response = requests.delete(
-            f"{HEADSCALE_URL}/api/v1/apikey/{key_id}", 
-            headers={"Authorization": f"Bearer {session['api_key']}"}, 
-            timeout=5
-        )
-        
-        if response.status_code == 200:
-            flash("API Key deleted successfully", 'success')
-        elif response.status_code == 403:
-            flash("You don't have permission to delete this API key", 'danger')
-        elif response.status_code == 401:
-            session.pop('api_key', None)
-            flash('Your session has expired. Please login again.', 'warning')
-            return redirect(url_for('login'))
         else:
-            flash(f"Error deleting API key: {response.status_code} - {response.text}", 'danger')
-            
-    except requests.exceptions.RequestException as e:
-        flash(f"Error connecting to Headscale server: {str(e)}", 'danger')
+            app.logger.error(f"Failed to delete API key {key_id}: {error}")
+            flash(f"Error deleting API key: {error}", 'danger')
+    else:
+        app.logger.info(f"Successfully deleted API key {key_id}")
+        print("[DEBUG] Delete operation successful")
+        flash('API key deleted successfully', 'success')
     
     return redirect(url_for('apikeys'))
 
@@ -334,7 +372,7 @@ def login():
                 if current_key:
                     session.clear()
                     session['api_key'] = api_key
-                    session['api_key_id'] = current_key['id']
+                    session['api_key_id'] = int(current_key['id'])
                     session['shown_welcome'] = False  # Initialize welcome message flag
                     session.permanent = True
                     flash('Login successful!', 'success')

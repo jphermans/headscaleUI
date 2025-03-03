@@ -38,7 +38,7 @@
                                     Expires: {{ key["expiration"] }}
                                 </small>
                             </div>
-                            <form method="POST" action="{{ url_for('delete_apikey', key_id=key['id']) }}">
+                            <form method="POST" action="{{ url_for('delete_apikey', key_id=key.prefix) }}">
                                 <button type="submit" class="btn btn-danger btn-sm" 
                                         onclick="return confirm('Are you sure you want to delete this API key?');">
                                     <i class="fas fa-trash"></i>
