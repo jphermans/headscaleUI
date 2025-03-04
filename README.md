@@ -188,6 +188,16 @@ When creating an API key, you can specify different validity periods:
 
 ---
 
+## 📸 Screenshots
+
+![Login Screen](images/Screenshot%202025-03-03%20at%2021.11.54.png)
+![Dashboard View](images/Screenshot%202025-03-03%20at%2021.12.09.png)
+![User Management](images/Screenshot%202025-03-03%20at%2021.12.24.png)
+![Node Overview](images/Screenshot%202025-03-03%20at%2021.12.36.png)
+![Settings Panel](images/Screenshot%202025-03-03%20at%2021.14.26.png)
+
+---
+
 ## 🔥 Contributing
 Feel free to submit **issues and pull requests** to improve the project.
 
