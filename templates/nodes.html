@@ -26,35 +26,164 @@
         <div class="card">
             <div class="card-body">
                 <h3 class="h4 mb-4">Manage Nodes</h3>
-                {% for user_id, nodes in nodes_by_user.items() %}
-                    <div class="mb-4">
-                        <h4 class="h5 mb-3">
-                            <i class="fas fa-user text-primary"></i>
-                            {{ users | selectattr("id", "equalto", user_id) | map(attribute="name") | first or "Unassigned Nodes" }}
-                        </h4>
-                        <div class="list-group">
-                            {% for node in nodes %}
-                                <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <i class="fas fa-laptop text-success"></i>
-                                        <span class="ms-2">{{ node["name"] }}</span>
-                                        <small class="text-muted d-block">
-                                            IP: {{ node["ipAddresses"] | join(', ') }}
-                                        </small>
-                                    </div>
-                                    <form method="POST" action="{{ url_for('delete_node', node_id=node['id']) }}">
-                                        <button type="submit" class="btn btn-danger btn-sm"
-                                                onclick="return confirm('Are you sure you want to delete this node?');">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
+                {% for user in users %}
+                    {% if nodes_by_user.get(user.id) %}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-user"></i> {{ user.name }}
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group">
+                                    {% for node in nodes_by_user.get(user.id, []) %}
+                                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                                            <div class="ms-2 me-auto">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-laptop me-2"></i>
+                                                    <div>
+                                                        <div class="fw-bold">{{ node.name }}</div>
+                                                        <small class="text-muted">
+                                                            IP: {{ node.ip or 'No IP' }}
+                                                            <br><i class="fas fa-toggle-{% if node.routes_enabled %}on text-success{% else %}off text-secondary{% endif %}"></i>
+                                                            Routes: {% if node.routes_enabled %}Enabled{% else %}Disabled{% endif %}
+                                                            {% if node.exit_node %}
+                                                                <br><i class="fas fa-route"></i> Exit Node
+                                                                {% if node.exit_node_option %}
+                                                                    <br>└ Allowed IPs: {{ node.exit_node_option|join(', ') }}
+                                                                {% endif %}
+                                                            {% endif %}
+                                                            {% if node.subnet_routes %}
+                                                                <br><i class="fas fa-network-wired"></i> Routes:
+                                                                {% for route in node.subnet_routes %}
+                                                                    <br>└ {{ route }}
+                                                                {% endfor %}
+                                                            {% endif %}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <form method="POST" action="{{ url_for('delete_node', node_id=node.id) }}"
+                                                  class="d-flex align-items-center">
+                                                <button type="button" class="btn btn-sm me-2 
+                                                       {% if node.routes_enabled %}btn-success{% else %}btn-outline-success{% endif %}"
+                                                        onclick="enableRoutes('{{ node.id }}')">
+                                                    <i class="fas fa-route"></i>
+                                                    {% if node.routes_enabled %}
+                                                    <span class="badge bg-light text-dark ms-1">Enabled</span>
+                                                    {% else %}
+                                                    <span class="badge bg-secondary ms-1">Disabled</span>
+                                                    {% endif %}
+                                                </button>
+                                                <button type="button" class="btn btn-primary btn-sm me-2"
+                                                        onclick="openEditModal('{{ node.id }}', '{{ node.name }}', {{ node.subnet_routes|tojson }})">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button type="submit" class="btn btn-danger btn-sm"
+                                                        onclick="return confirm('Are you sure you want to delete this node?');">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% endfor %}
                                 </div>
-                            {% endfor %}
+                            </div>
                         </div>
-                    </div>
+                    {% endif %}
                 {% endfor %}
             </div>
         </div>
     </div>
 </div>
+
+<!-- Edit Node Modal -->
+<div class="modal fade" id="editNodeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Node</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Note:</strong> To add routes, you need to configure them directly on the node using the Tailscale client:
+                    <pre class="mt-2 bg-light p-2 rounded"><code>sudo tailscale up --advertise-routes=192.168.0.0/24</code></pre>
+                    <small>Replace 192.168.0.0/24 with your subnet.</small>
+                </div>
+                <form id="editNodeForm" method="POST">
+                    <input type="hidden" id="nodeId" name="nodeId">
+                    <div class="mb-3">
+                        <label class="form-label">Node Name</label>
+                        <input type="text" class="form-control" id="nodeName" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Current Routes</label>
+                        <div id="routesList">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this JavaScript before the closing body tag -->
+<script>
+function enableRoutes(nodeId) {
+    if (!confirm('Do you want to enable routes for this node?')) {
+        return;
+    }
+    
+    fetch(`/edit_node/${nodeId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.error || 'Error enabling routes');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error enabling routes');
+    });
+}
+
+let editModal;
+
+document.addEventListener('DOMContentLoaded', function() {
+    editModal = new bootstrap.Modal(document.getElementById('editNodeModal'));
+});
+
+function openEditModal(nodeId, nodeName, routes) {
+    document.getElementById('nodeId').value = nodeId;
+    document.getElementById('nodeName').value = nodeName;
+    
+    // Display existing routes as read-only
+    const routesList = document.getElementById('routesList');
+    routesList.innerHTML = '';
+    
+    if (routes && routes.length > 0) {
+        routes.forEach(route => {
+            const div = document.createElement('div');
+            div.className = 'mb-2';
+            div.innerHTML = `<span class="badge bg-secondary"><i class="fas fa-network-wired"></i> ${route}</span>`;
+            routesList.appendChild(div);
+        });
+    } else {
+        routesList.innerHTML = '<p class="text-muted">No routes configured</p>';
+    }
+    
+    editModal.show();
+}
+</script>
 {% endblock %}

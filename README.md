@@ -15,6 +15,7 @@ Built with **Flask** and **Bootstrap**, this UI provides an intuitive way to int
 - 🔒 **Session management with auto-logout**
 - 🌓 **Theme Support**: Light, Dark, and System theme options
 - 🔔 **Auto-dismissing notifications**
+- 🟢 **Server Status**: Real-time Headscale server status indicator
 
 ---
 
@@ -151,6 +152,12 @@ python app.py
    headscale apikey create --expiration 8760h
    ```
 3. Copy the generated key - you'll need it to log in to HeadscaleUI
+
+### Server Status
+- The login page displays real-time Headscale server status
+- Shows if the server is online/offline
+- Displays the server URL for easy verification
+- Helps troubleshoot connection issues immediately
 
 ### Validity Periods
 

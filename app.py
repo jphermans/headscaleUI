@@ -1,6 +1,6 @@
 import os
 import requests
-from flask import Flask, render_template, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, redirect, url_for, flash, session, jsonify, request
 from flask_wtf import FlaskForm
 from wtforms.fields.choices import SelectField
 from wtforms.fields.simple import StringField, SubmitField
@@ -241,7 +241,7 @@ def nodes():
             flash(f"Node {form.name.data} added!", "success")
         return redirect(url_for('nodes'))
 
-    # Group nodes by user
+    # Group nodes by user with additional info
     nodes_by_user = {}
     for node in nodes:
         user_info = node.get("user", {})
@@ -250,7 +250,30 @@ def nodes():
         if user_id:
             if user_id not in nodes_by_user:
                 nodes_by_user[user_id] = []
-            nodes_by_user[user_id].append(node)
+            
+            # Get route status for this node
+            routes_data, _ = get_headscale_data(f"/api/v1/routes/{node.get('id')}")
+            routes_enabled = routes_data.get('enabled', False) if routes_data else False
+            
+            # Get routes for this specific node
+            routes_data, routes_error = get_headscale_data(f"/api/v1/node/{node.get('id')}/routes")
+            node_routes = []
+            if not routes_error:
+                for route in routes_data.get('routes', []):
+                    if route.get('prefix'):
+                        node_routes.append(route.get('prefix'))
+            
+            # Add exit node and subnet info if available
+            node_info = {
+                'id': node.get('id'),
+                'name': node.get('name'),
+                'ip': ', '.join(node.get('ipAddresses', [])),
+                'exit_node': node.get('isExitNode', False),
+                'exit_node_option': node.get('exitNodeAllowedIPs', []),
+                'subnet_routes': node_routes,
+                'routes_enabled': routes_enabled
+            }
+            nodes_by_user[user_id].append(node_info)
 
     return render_template(
         'nodes.html',
@@ -358,6 +381,19 @@ def login():
         return redirect(url_for('index'))
         
     form = LoginForm()
+    # Check server status
+    server_status = False
+    try:
+        response = requests.get(f"{HEADSCALE_URL}/api/v1/apikey", timeout=5)
+        # Consider server online only if we can actually connect and get a response
+        server_status = response.status_code in [200, 401, 403]  # Common response codes when server is up
+    except requests.exceptions.RequestException as e:
+        print(f"[DEBUG] Server connection error: {str(e)}")
+        server_status = False
+
+    # Get server URL for display (remove protocol and trailing slash)
+    display_url = HEADSCALE_URL.replace('https://', '').replace('http://', '').rstrip('/')
+
     if form.validate_on_submit():
         api_key = form.api_key.data.strip()
         headers = {"Authorization": f"Bearer {api_key}"}
@@ -391,7 +427,9 @@ def login():
         except requests.exceptions.RequestException as e:
             flash(f'Error connecting to Headscale server: {str(e)}', 'danger')
         
-    return render_template('login.html', form=form)
+    return render_template('login.html', form=form, 
+                          server_status=server_status,
+                          server_url=display_url)
 
 @app.route('/logout')
 def logout():
@@ -427,6 +465,26 @@ def health():
         'status': 'healthy' if is_headscale_healthy else 'unhealthy',
         'headscale_connection': is_headscale_healthy
     }), status
+
+@app.route('/edit_node/<string:node_id>', methods=['POST'])
+@login_required
+def edit_node(node_id):
+    """Enable routes for a node."""
+    try:
+        # Enable routes for the node
+        result, error = post_headscale_data(
+            f"/api/v1/routes/{node_id}/enable",  # Updated endpoint format
+            {}  # Empty payload as we just need to enable routes
+        )
+        
+        if error:
+            app.logger.error(f"Error enabling routes for node {node_id}: {error}")
+            return jsonify({'success': False, 'error': f"Error enabling routes: {error}"})
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        app.logger.error(f"Error editing node {node_id}: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True)
